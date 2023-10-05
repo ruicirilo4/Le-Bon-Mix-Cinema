@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Now Playing Info</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        #nowPlayingInfo {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        .audio-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+        }
+
+        audio {
+            width: 100%;
+        }
+
+        .audio-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .audio-controls button {
+            background-color: #007BFF;
+            color: #fff;
+            font-size: 18px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+
+        .audio-controls button:hover {
+            background-color: #0056b3;
+        }
+
+        .fa-play,
+        .fa-pause,
+        .fa-stop {
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Now Playing Info:Le Bon Mix Cinema</h1>
+        <p id="nowPlayingInfo">Loading...</p> <!-- Initial loading message -->
+        
+        <div class="audio-container">
+            <audio controls>
+                <source src="https://stream9.xdevel.com/audio10s976748-1740/stream/icecast.audio" type="audio/mpeg">
+                Seu navegador não suporta a reprodução de áudio.
+            </audio>
+            <div class="audio-controls">
+                <button id="playButton"><i class="fas fa-play"></i> Play</button>
+                <button id="pauseButton"><i class="fas fa-pause"></i> Pause</button>
+                <button id="stopButton"><i class="fas fa-stop"></i> Stop</button>
+            </div>
+        </div>
+        <ul id="recentSongsList"></ul>
+        <script>
+            const audio = document.querySelector('audio');
+            const playButton = document.getElementById('playButton');
+            const pauseButton = document.getElementById('pauseButton');
+            const stopButton = document.getElementById('stopButton');
+            const nowPlayingInfo = document.getElementById('nowPlayingInfo');
+
+            audio.src = 'https://stream9.xdevel.com/audio10s976748-1740/stream/icecast.audio';
+
+            playButton.addEventListener('click', () => {
+                audio.play();
+                nowPlayingInfo.textContent = 'Playing';
+            });
+
+            pauseButton.addEventListener('click', () => {
+                audio.pause();
+                nowPlayingInfo.textContent = 'Paused';
+            });
+
+            stopButton.addEventListener('click', () => {
+                audio.pause();
+                audio.currentTime = 0;
+                nowPlayingInfo.textContent = 'Stopped';
+            });
+
+            audio.addEventListener('ended', () => {
+                nowPlayingInfo.textContent = 'Finished';
+            });
+
+            async function fetchNowPlayingInfo() {
+                const response = await fetch("/now-playing");
+                const data = await response.text();
+                document.getElementById("nowPlayingInfo").textContent = data;
+            }
+// ...
+
+// Function to fetch the list of recent songs
+async function fetchRecentSongs() {
+    const response = await fetch("/recent-songs");
+    const data = await response.json();
+    const recentSongsList = document.getElementById("recentSongsList");
+
+    // Clear the existing list
+    recentSongsList.innerHTML = "";
+
+    // Loop through the recent songs and add them to the list
+    data.forEach((song, index) => {
+        if (index < 10) { // Display up to 10 recent songs
+            const listItem = document.createElement("li");
+            listItem.textContent = song;
+            recentSongsList.appendChild(listItem);
+        }
+    });
+}
+
+// Fetch recent songs when the page loads
+fetchRecentSongs();
+
+// Fetch recent songs every minute to keep the list updated
+setInterval(fetchRecentSongs, 60000); // Update every minute
+
+// ...
+
+            fetchNowPlayingInfo();
+            setInterval(fetchNowPlayingInfo, 60000); // Update every minute
+        </script>
+    </div>
+</body>
+</html>
